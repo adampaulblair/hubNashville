@@ -1,10 +1,12 @@
 ## install.packages("RSocrata")
 ## install.packages("gmodels")
 ## install.packages("tigris")
+## install.packages("censusr")
 
 library(RSocrata)
 library(gmodels)
 library(tigris)
+library(censusr)
 
 ## Import data using API
 
@@ -54,7 +56,21 @@ case_means[c("Group.case_request", "days_open")]
 
 coords <- data.frame(latitude, longitude)
 
-coords$tract_id <- apply(coords, 1, function(row) call_geolocator_latlon(row["latitude"], row["longitude"]))
+# df$tract_id <- apply(coords, 1, function(row) call_geolocator_latlon(row["latitude"], row["longitude"]))
+
+# df$tract_id <- append_geoid(lat = latitude, lon = longitude, 'tract')
+
+# this code worked:
+
+# test_coords <- data.frame(lat = 36.13617, lon = -86.83346)
+# test_coords
+# lat       lon
+# 1 36.13617 -86.83346
+# test_append <- append_geoid(test_coords, 'tract')
+# test_append
+# lat       lon           geoid
+# 1 36.13617 -86.83346 470370167002037
+
 
 detach(df)
 
