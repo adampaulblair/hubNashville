@@ -1,38 +1,55 @@
-## install.packages("RSocrata")
-## install.packages("gmodels")
-## install.packages("tigris")
-## install.packages("censusr")
+# install.packages("RSocrata")
+# install.packages("gmodels")
+# install.packages("tigris")
+# install.packages("censusr")
+# install.packages("tidyverse")
+# install.packages("lubridate")
 
 library(RSocrata)
 library(gmodels)
 library(tigris)
 library(censusr)
+library(tidyverse)
+library(here)
+library(lubridate)
 
-## Import data using API
 
-df <- read.socrata(
+# Data Import ----
+
+hub_data <- as_tibble(
+  read.socrata(
   "https://data.nashville.gov/resource/7qhx-rexh.json",
   app_token = NULL,
   email = NULL,
   stringsAsFactors = FALSE
+  )
 )
 
-## str(df)
-## summary(df)
 
-attach(df)
+## str(hub_data)
+## summary(hub_data)
 
-## Convert seconds into days
+attach(hub_data)
 
-second_conversion <- 60 * 60 * 24
 
-## Calculate number of days a case took to close
+seconds <- 60 * 60 * 24 # calculate seconds in a day
 
-days_open <- as.numeric((date_time_closed - date_time_opened) / second_conversion)
+hub_data %>% 
+  mutate(days_open = (date_time_closed - date_time_opened) / seconds)
+
+
+ymd_hms(hub_data$date_time_opened)
+
+
+
+
+days_open <- as.numeric((date_time_closed - date_time_opened) / seconds) # calculate days case was open
+
 
 ## Append days open to data frame
 
-df <- cbind(df, days_open)
+hub_data <- cbind(hub_data, days_open)
+
 
 ## Specify categorical variables
 
@@ -46,19 +63,22 @@ incident_council_district <- factor(incident_council_district)
 latitude <- as.numeric(latitude)
 longitude <- as.numeric(longitude)
 
+
 ## Calculate and print average days open by case and subcase
 
-case_means <- aggregate(df, by = list(Group.case_request = case_request), FUN = mean, na.rm = TRUE)
+case_means <- aggregate(hub_data, by = list(Group.case_request = case_request), FUN = mean, na.rm = TRUE)
 
 case_means[c("Group.case_request", "days_open")]
+
 
 ## Append census tract IDs using lat-long
 
 coords <- data.frame(latitude, longitude)
 
-# df$tract_id <- apply(coords, 1, function(row) call_geolocator_latlon(row["latitude"], row["longitude"]))
 
-# df$tract_id <- append_geoid(lat = latitude, lon = longitude, 'tract')
+# hub_data$tract_id <- apply(coords, 1, function(row) call_geolocator_latlon(row["latitude"], row["longitude"]))
+
+# hub_data$tract_id <- append_geoid(lat = latitude, lon = longitude, 'tract')
 
 # this code worked:
 
@@ -72,8 +92,8 @@ coords <- data.frame(latitude, longitude)
 # 1 36.13617 -86.83346 470370167002037
 
 
-detach(df)
+detach(hub_data)
 
 ## Save file
 
-## write.csv(df, file = "C:/Users/adamp/Dropbox/TSU/Research/hubNashville/hubNashville/df.txt")
+## write.csv(hub_data, file = "C:/Users/adamp/Dropbox/TSU/Research/hubNashville/hubNashville/hub_data.txt")
